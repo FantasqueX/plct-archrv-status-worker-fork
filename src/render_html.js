@@ -1,12 +1,12 @@
 const generateHTML = (pkgs, durations) => {
-    const duration_list = Object.entries(durations)
-        .map(([name, duration]) => {
-            return `<span class="subreqtime"> -> Request to ${name} took ${duration}ms</span><br/>`;
-        })
-        .join('');
-    const package_list = renderPackages(Object.values(pkgs));
+  const duration_list = Object.entries(durations)
+    .map(([name, duration]) => {
+      return `<span class="subreqtime"> -> Request to ${name} took ${duration}ms</span><br/>`;
+    })
+    .join("");
+  const package_list = renderPackages(Object.values(pkgs));
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
     <head>
         <title>ArchRV PKG Status</title>
@@ -204,161 +204,171 @@ const generateHTML = (pkgs, durations) => {
     </body>
 </html>
     `;
-}
+};
 
 export default generateHTML;
 
 const renderPackages = (pkgs) => {
-    pkgs = pkgs.filter(pkg => {
-        if (pkg.felix !== 'dir' && !pkg.work.kind && !pkg.user) {
-            return false;
-        }
-        // todo: apply search filter
-        return true;
-    })
+  pkgs = pkgs.filter((pkg) => {
+    if (pkg.felix !== "dir" && !pkg.work.kind && !pkg.user) {
+      return false;
+    }
+    // todo: apply search filter
+    return true;
+  });
 
-    // todo: apply sort filter
+  // todo: apply sort filter
 
-    const tabs = [
-        renderTabName,
-        (pkg) => pkg.user || `<em>nobody</em>`,
-        renderTabWork,
-        renderTabMark,
-    ]
+  const tabs = [
+    renderTabName,
+    (pkg) => pkg.user || `<em>nobody</em>`,
+    renderTabWork,
+    renderTabMark,
+  ];
 
-    return pkgs
-        .map(pkg => {
-            const tr_class = [
-                (() => {
-                    if (pkg.work.kind) {
-                        return `pkgwork-${pkg.work.kind}`;
-                    } else {
-                        return ''
-                    }
-                })(),
-                ...pkg.mark.map(m => {
-                    if (typeof m === 'string') {
-                        return `pkgmark-${m}`;
-                    }
-                    return `pkgmark-${m.name}`;
-                })
-            ]
-                .join(' ');
-            const tab_list = tabs.map(tab => `<td>${tab(pkg)}</td>`).join('');
-            const comment = pkg.mark
-                .filter(m => typeof m === 'object')
-                .map(m => `
+  return pkgs
+    .map((pkg) => {
+      const tr_class = [
+        (() => {
+          if (pkg.work.kind) {
+            return `pkgwork-${pkg.work.kind}`;
+          } else {
+            return "";
+          }
+        })(),
+        ...pkg.mark.map((m) => {
+          if (typeof m === "string") {
+            return `pkgmark-${m}`;
+          }
+          return `pkgmark-${m.name}`;
+        }),
+      ].join(" ");
+      const tab_list = tabs.map((tab) => `<td>${tab(pkg)}</td>`).join("");
+      const comment = pkg.mark
+        .filter((m) => typeof m === "object")
+        .map(
+          (m) => `
 <tr class="${tr_class} package-comment expand">
     <td class="expand-pre">--> ${m.name}</td>
     <td class="expand" colspan="3">
-        ${m.comment.replaceAll('\<', '&lt;').replaceAll('\>', '&gt;')}
+        ${m.comment.replaceAll("<", "&lt;").replaceAll(">", "&gt;")}
     </td>
 </tr>
-                `)
-                .join('');
+                `
+        )
+        .join("");
 
-            return `
+      return `
 <tr class="${tr_class}">
     ${tab_list}
 </tr>
 ${comment}
             `;
-        })
-        .join('');
-}
+    })
+    .join("");
+};
 
-const wrapExternalLink = (url, inner) => `<a href="${url}" target="_blank">${inner}</a>`;
+const wrapExternalLink = (url, inner) =>
+  `<a href="${url}" target="_blank">${inner}</a>`;
 
 const renderTabName = (pkg) => {
-    let name = pkg.name;
-    if (pkg.felix === 'dir') {
-        name = wrapExternalLink(`https://archriscv.felixc.at/.status/logs/${pkg.base || pkg.name}/`, name);
-    } else if (pkg.work.kind === 'prrm') {
-        name = `<del>${name}</del>`;
-    }
+  let name = pkg.name;
+  if (pkg.felix === "dir") {
+    name = wrapExternalLink(
+      `https://archriscv.felixc.at/.status/logs/${pkg.base || pkg.name}/`,
+      name
+    );
+  } else if (pkg.work.kind === "prrm") {
+    name = `<del>${name}</del>`;
+  }
 
-    let tags =
-        [
-            {
-                tag: 'leaf',
-                condition: pkg.felix === 'leaf',
-            },
-            {
-                tag: 'rotten',
-                condition: pkg.mark.find(mark => mark === 'triage-patch-failed'),
-                url: `https://github.com/felixonmars/archriscv-packages/tree/master/${pkg.name}`,
-            },
-            {
-                tag: 'patched',
-                condition: pkg.mark.find(mark => mark === 'patched'),
-                url: `https://github.com/felixonmars/archriscv-packages/tree/master/${pkg.name}`,
-            }
-        ]
-            .filter(tag => tag.condition)
-            .map(tag => {
-                let tag_html = `<span class="pkgtag pkgtag-${tag.tag}">[${tag.tag}]</span>`;
-                if (tag.url) {
-                    tag_html = wrapExternalLink(tag.url, tag_html);
-                }
-                return tag_html;
-            })
-            .join(' ');
+  let tags = [
+    {
+      tag: "leaf",
+      condition: pkg.felix === "leaf",
+    },
+    {
+      tag: "rotten",
+      condition: pkg.mark.find((mark) => mark === "triage-patch-failed"),
+      url: `https://github.com/felixonmars/archriscv-packages/tree/master/${pkg.name}`,
+    },
+    {
+      tag: "patched",
+      condition: pkg.mark.find((mark) => mark === "patched"),
+      url: `https://github.com/felixonmars/archriscv-packages/tree/master/${pkg.name}`,
+    },
+  ]
+    .filter((tag) => tag.condition)
+    .map((tag) => {
+      let tag_html = `<span class="pkgtag pkgtag-${tag.tag}">[${tag.tag}]</span>`;
+      if (tag.url) {
+        tag_html = wrapExternalLink(tag.url, tag_html);
+      }
+      return tag_html;
+    })
+    .join(" ");
 
-    let arch_link = wrapExternalLink(`https://archlinux.org/packages/?q=${pkg.base || pkg.name}`, '[A]');
+  let arch_link = wrapExternalLink(
+    `https://archlinux.org/packages/?q=${pkg.base || pkg.name}`,
+    "[A]"
+  );
 
-    return `${arch_link} | ${name} ${tags}`;
-}
+  return `${arch_link} | ${name} ${tags}`;
+};
 
 const renderTabWork = (pkg) => {
-    const str_work = {
-        'add': 'working',
-        'pr': 'pull requested',
-        'prrm': 'rm requested',
-    }
-    let result = str_work[pkg.work.kind] || '';
-    if (pkg.work.pr) {
-        result = wrapExternalLink(pkg.work.pr, result);
-    }
-    return result;
-}
+  const str_work = {
+    add: "working",
+    pr: "pull requested",
+    prrm: "rm requested",
+  };
+  let result = str_work[pkg.work.kind] || "";
+  if (pkg.work.pr) {
+    result = wrapExternalLink(pkg.work.pr, result);
+  }
+  return result;
+};
 
 const renderTabMark = (pkg) => {
-    const str_mark = {
-        'unknown': 'unknown',
-        'upstreamed': 'upstreamed',
-        'outdated': 'outdated',
-        'outdated_dep': 'dep outdated',
-        'stuck': 'stuck',
-        'noqemu': 'noqemu',
-        'ready': 'ready',
-        'pending': 'pending',
-        'ignore': 'ignore',
-        'missing_dep': 'dep missing',
-        'failing': 'failing',
-        'flaky': 'flaky',
-        'nocheck': 'no check',
-    }
+  const str_mark = {
+    unknown: "unknown",
+    upstreamed: "upstreamed",
+    outdated: "outdated",
+    outdated_dep: "dep outdated",
+    stuck: "stuck",
+    noqemu: "noqemu",
+    ready: "ready",
+    pending: "pending",
+    ignore: "ignore",
+    missing_dep: "dep missing",
+    failing: "failing",
+    flaky: "flaky",
+    nocheck: "no check",
+  };
 
-    return pkg.mark
-        .map(m => {
-            // marks from felix
-            if (typeof m === 'string') {
-                return `<span class="pkgmark pkgmark-${m}">${m.replace('triage-', '')}</span>`;
-            }
+  return pkg.mark
+    .map((m) => {
+      // marks from felix
+      if (typeof m === "string") {
+        return `<span class="pkgmark pkgmark-${m}">${m.replace(
+          "triage-",
+          ""
+        )}</span>`;
+      }
 
-            // marks from melon
-            let result = str_mark[m.name] || '';
-            let link = m.comment.match(/https?:\/\/[^\s]+/g);
-            if (link) {
-                result = wrapExternalLink(link[0], result);
-            }
-            let title = `marked-by: ${m.by.alias}`;
-            if (m.comment) {
-                result += '*';
-                title += '\n...' + m.comment.replaceAll(`"`, `'`);
-            }
+      // marks from melon
+      let result = str_mark[m.name] || "";
+      let link = m.comment.match(/https?:\/\/[^\s]+/g);
+      if (link) {
+        result = wrapExternalLink(link[0], result);
+      }
+      let title = `marked-by: ${m.by.alias}`;
+      if (m.comment) {
+        result += "*";
+        title += "\n..." + m.comment.replaceAll(`"`, `'`);
+      }
 
-            return `<span class="pkgmark pkgmark-${m.name}" title="${title}">${result}</span>`;
-        })
-        .join(', ');
-}
+      return `<span class="pkgmark pkgmark-${m.name}" title="${title}">${result}</span>`;
+    })
+    .join(", ");
+};
