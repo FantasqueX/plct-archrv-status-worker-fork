@@ -176,20 +176,15 @@ const generateHTML = (pkgs, durations) => {
             background-color: red;
           }
         }
-        body {
-          width: 80%;
-        }
-        @media (max-aspect-ratio: 1/1) {
-          body {
-            width: 100%;
-          }
-        }
-        @media (min-aspect-ratio: 16/9) {
-          body {
-            width: 62%;
-          }
-        }
         </style>
+        <script>
+        function rewidth() {
+            document.getElementsByTagName("body")[0].style.width = 
+                Math.min(100, 1.1 * window.innerHeight / window.innerWidth * 100) + "%";
+        }
+        window.addEventListener("load", rewidth);
+        window.addEventListener("resize", rewidth);
+        </script>
     </head>
     <body>
         ${duration_list}
@@ -226,7 +221,7 @@ const renderPackages = (pkgs) => {
 
     const tabs = [
         renderTabName,
-        (pkg) => pkg.user || `<em>**nobody**</em>`,
+        (pkg) => pkg.user || `<em>nobody</em>`,
         renderTabWork,
         renderTabMark,
     ]
@@ -246,14 +241,7 @@ const renderPackages = (pkgs) => {
                         return `pkgmark-${m}`;
                     }
                     return `pkgmark-${m.name}`;
-                }),
-                (() => {
-                    if (pkg.user) {
-                        return `user-${pkg.user}`
-                    } else {
-                        return 'nobody'
-                    }
-                })()
+                })
             ]
                 .join(' ');
             const tab_list = tabs.map(tab => `<td>${tab(pkg)}</td>`).join('');
